@@ -10,7 +10,7 @@ About
 Channel and optional tag definitions are read from a M3U playlist file::
 
     #EXTINF:duration,[channel number - ]channel name
-    #EXTTV:tag,tag,tag...;language;XMLTV id
+    #EXTTV:tag,tag,tag...;language;XMLTV id[;icon URL]
     udp://@ip:port
 
 The #EXTTV line and its contents are optional.
@@ -22,7 +22,7 @@ sample.m3u::
     udp://@239.1.1.115:5000
 
     #EXTINF:0,SLO 1 HD
-    #EXTTV:nacionalni,hd;slovenski;
+    #EXTTV:nacionalni,hd;slovenski;http://cdn1.siol.tv/logo/93x78/slo2.png
     udp://@239.10.2.56:5000
 
 The script creates iptvservices, channels and channeltags directories into which the
@@ -51,7 +51,8 @@ following files are written::
         ],
         "dvr_extra_time_pre": 0,
         "dvr_extra_time_post": 0,
-        "channel_number": 1
+        "channel_number": 1,
+        "icon": ""
     }
 
     #one file per tag:
