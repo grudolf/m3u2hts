@@ -46,6 +46,7 @@ def readm3u(infile, num, inputcodec):
     chtags = None
     chlanguage = None
     chid = None
+    chicon = None
     for line in instream.readlines():
         line = line.strip()
         if line.startswith("#EXTINF:"):
@@ -57,7 +58,7 @@ def readm3u(infile, num, inputcodec):
             else:
                 chname = buff[1]
         elif line.startswith('#EXTTV:'):
-            #EXTTV:tag,tag,tag...;language;XMLTV id
+            #EXTTV:tag,tag,tag...;language;XMLTV id[;icon URL]
             buff = line[7:].split(';')
             chtags = buff[0].split(',')
             for t in chtags:
@@ -71,15 +72,17 @@ def readm3u(infile, num, inputcodec):
                     tags[chlanguage] = {'num': tagcnt, 'name': chlanguage}
                 chtags.append(chlanguage)
             chid = buff[2]
+            chicon = buff[3] if len(buff) > 3 else None
         elif line.startswith('udp://@'):
             chancnt += 1
             chip, chport = line[7:].rsplit(':', 1)
             channels[chancnt] = {'num': chancnt, 'name': chname, 'tags': chtags, 'lang': chlanguage, 'ip': chip,
-                                 'port': chport, 'id': chid}
+                                 'port': chport, 'id': chid, 'icon': chicon}
             chname = ''
             chtags = None
             chlanguage = None
             chid = None
+            chicon = None
         else:
             continue
 
@@ -110,6 +113,8 @@ def writechannels():
             jschan['xmltv-channel'] = channel['id']
         if channel['tags'] is not None:
             jschan['tags'] = list(tags[x]['num'] for x in channel['tags'])
+        if channel['icon'] is not None:
+            jschan['icon'] = channel['icon']
         writejson(os.path.join(CHANNELS, str(channel['num'])), jschan)
 
 
