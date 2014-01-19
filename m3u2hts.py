@@ -26,15 +26,20 @@ IPTVSERVICES = "iptvservices"
 CHANNELS = "channels"
 CHANNELTAGS = "channeltags"
 
+CHAN_NUMBERING_GENERATE = 0
+CHAN_NUMBERING_DURATION = 1
+CHAN_NUMBERING_NAMES = 2
+
 channels = dict()
 tags = dict()
 
 
-def readm3u(infile, num, inputcodec):
+def readm3u(infile, removenum, channumbering, inputcodec):
     """
     Read IPTV channels from .M3U file
     @param infile: input file
-    @param num: try to remove channel numbers from names
+    @param removenum: try to remove channel numbers from names
+    @param channumbering: how to get channel number
     @param inputcodec: encoding of input file
     """
 
@@ -45,7 +50,8 @@ def readm3u(infile, num, inputcodec):
     chname = ''
     chtags = None
     chlanguage = None
-    chid = None
+    chnumber = None
+    chxmltv = None
     chicon = None
     for line in instream.readlines():
         line = line.strip()
@@ -53,12 +59,16 @@ def readm3u(infile, num, inputcodec):
             #EXTINF:duration,channel number - channel name
             buff = line[8:].split(',')
             m = PROGNUM.search(buff[1])
-            if num and m:
+            if removenum and m:
                 chname = m.group(2)
             else:
                 chname = buff[1]
+            if m and channumbering == CHAN_NUMBERING_NAMES:
+                chnumber = m.group(1)
+            elif channumbering == CHAN_NUMBERING_DURATION:
+                chnumber = buff[0]
         elif line.startswith('#EXTTV:'):
-            #EXTTV:tag,tag,tag...;language;XMLTV id[;icon URL]
+            #EXTTV:tag[,tag,tag...];language;XMLTV id[;icon URL]
             buff = line[7:].split(';')
             chtags = buff[0].split(',')
             for t in chtags:
@@ -71,17 +81,22 @@ def readm3u(infile, num, inputcodec):
                     tagcnt += 1
                     tags[chlanguage] = {'num': tagcnt, 'name': chlanguage}
                 chtags.append(chlanguage)
-            chid = buff[2]
+            chxmltv = buff[2]
             chicon = buff[3] if len(buff) > 3 else None
         elif line.startswith('udp://@'):
             chancnt += 1
+            if channumbering == CHAN_NUMBERING_GENERATE: chnumber = chancnt
             chip, chport = line[7:].rsplit(':', 1)
-            channels[chancnt] = {'num': chancnt, 'name': chname, 'tags': chtags, 'lang': chlanguage, 'ip': chip,
-                                 'port': chport, 'id': chid, 'icon': chicon}
+            if chname in channels:
+                print "%s already exists" % chname
+                chname = chname + '.'
+            channels[chname] = {'num': chancnt, 'number': chnumber, 'name': chname, 'tags': chtags, 'lang': chlanguage,
+                                 'ip': chip, 'port': chport, 'xmltv': chxmltv, 'icon': chicon}
             chname = ''
             chtags = None
             chlanguage = None
-            chid = None
+            chnumber = None
+            chxmltv = None
             chicon = None
         else:
             continue
@@ -107,10 +122,11 @@ def writechannels():
         #channels/?
         jschan = {'name': channel['name'],
                   'dvr_extra_time_pre': 0,
-                  'dvr_extra_time_post': 0,
-                  'channel_number': channel['num']}
-        if channel['id'] is not None:
-            jschan['xmltv-channel'] = channel['id']
+                  'dvr_extra_time_post': 0}
+        if channel['number'] is not None:
+            jschan['channel_number'] = channel['number']
+        if channel['xmltv'] is not None:
+            jschan['xmltv-channel'] = channel['xmltv']
         if channel['tags'] is not None:
             jschan['tags'] = list(tags[x]['num'] for x in channel['tags'])
         if channel['icon'] is not None:
@@ -146,12 +162,14 @@ def writejson(filename, obj):
 def main():
     par = OptionParser(usage="%prog [options] inputfile",
                        description="Generate TVHeadend 3.x channel/tag configuration files from IPTV M3U playlist")
-    par.add_option('-n', '--num', action='store_true', help=u'remove program numbers')
+    par.add_option('-r', '--removenum', action='store_true', help=u'remove program numbers from names')
+    par.add_option('-n', '--numbering', type='int', default=0,
+                   help=u'program numbers are generated(0), determined from duration(1) or extracted from program names(2)')
     par.add_option('-c', '--codec', action='store', dest='codec', default='cp1250',
                    help=u'input file encoding [default: %default]')
     opt, args = par.parse_args()
     if len(args) == 1:
-        readm3u(args[0], opt.num, opt.codec)
+        readm3u(args[0], opt.removenum, opt.numbering, opt.codec)
         writechannels()
         writetags()
         print("OK")

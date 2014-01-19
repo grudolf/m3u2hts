@@ -10,7 +10,7 @@ About
 Channel and optional tag definitions are read from a M3U playlist file::
 
     #EXTINF:duration,[channel number - ]channel name
-    #EXTTV:tag,tag,tag...;language;XMLTV id[;icon URL]
+    #EXTTV:tag[,tag,tag...];language;XMLTV id[;icon URL]
     udp://@ip:port
 
 The #EXTTV line and its contents are optional.
