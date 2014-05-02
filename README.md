@@ -83,6 +83,20 @@ If you want to import the configuration directly, you should stop the TVHeadend 
 
 Alternatively, run the script somewhere else and transfer the files to TVHeadend config dir when service isn't running.
 
+New file format
+---------------
+
+Experimental, use ``--newformat`` switch to create TVHeadend 3.9 compatible configuration.
+The file structure is:
+
+    input/iptv/config
+    input/iptv/networks/UUID/config                      - one network
+    input/iptv/networks/UUID/muxes/UUID/config           - one mux per channel
+    input/iptv/networks/UUID/muxes/UUID/services/UUID    - one service per channel
+    channel/UUID                                         - channel (linked to service)
+    epggrab/xmltv/channels/UUID                          - EPG info (linked to channel)
+    channeltags/#                                        - channel tags
+
 Licence
 -------
 Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php

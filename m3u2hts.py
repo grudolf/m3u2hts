@@ -16,15 +16,10 @@ import os
 try:
     import json
 except ImportError:
-    #old python? easy_install simplejson
+    # old python? easy_install simplejson
     import simplejson as json
 
 PROGNUM = re.compile(r"(\d+) - (.*)")  # #EXTINF:0,1 - SLO 1 -> #1 - num, 2 - ime
-
-#output directories
-IPTVSERVICES = "iptvservices"
-CHANNELS = "channels"
-CHANNELTAGS = "channeltags"
 
 CHAN_NUMBERING_GENERATE = 0
 CHAN_NUMBERING_DURATION = 1
@@ -91,7 +86,7 @@ def readm3u(infile, removenum, channumbering, inputcodec):
                 print "%s already exists" % chname
                 chname = chname + '.'
             channels[chname] = {'num': chancnt, 'number': chnumber, 'name': chname, 'tags': chtags, 'lang': chlanguage,
-                                 'ip': chip, 'port': chport, 'xmltv': chxmltv, 'icon': chicon}
+                                'ip': chip, 'port': chport, 'xmltv': chxmltv, 'icon': chicon}
             chname = ''
             chtags = None
             chlanguage = None
@@ -103,10 +98,12 @@ def readm3u(infile, removenum, channumbering, inputcodec):
 
 
 def writechannels():
-    if not os.path.exists(IPTVSERVICES):
-        os.mkdir(IPTVSERVICES)
-    if not os.path.exists(CHANNELS):
-        os.mkdir(CHANNELS)
+    svcpath = 'iptvservices'
+    chnpath = 'channels'
+    if not os.path.exists(svcpath):
+        os.mkdir(svcpath)
+    if not os.path.exists(chnpath):
+        os.mkdir(chnpath)
     for channel in channels.values():
         #iptvservices/iptv_?
         jssvc = {'pmt': 0,
@@ -117,7 +114,7 @@ def writechannels():
                  'mapped': 1,
                  'pcr': 0,
                  'disabled': 0}
-        writejson(os.path.join(IPTVSERVICES, "iptv_" + str(channel['num'])), jssvc)
+        writejson(os.path.join(svcpath, "iptv_" + str(channel['num'])), jssvc)
 
         #channels/?
         jschan = {'name': channel['name'],
@@ -131,21 +128,117 @@ def writechannels():
             jschan['tags'] = list(tags[x]['num'] for x in channel['tags'])
         if channel['icon'] is not None:
             jschan['icon'] = channel['icon']
-        writejson(os.path.join(CHANNELS, str(channel['num'])), jschan)
+        writejson(os.path.join(chnpath, str(channel['num'])), jschan)
+
+
+def uuid():
+    import uuid
+
+    return uuid.uuid4().hex
+
+
+def writechannels39():
+    xmltvpath = "epggrab/xmltv/channels"
+    if not os.path.exists(xmltvpath):
+        os.makedirs(xmltvpath)
+
+    chnpath='channel'
+    if not os.path.exists(chnpath):
+        os.makedirs(chnpath)
+
+    #input/iptv
+    path = os.path.join('input', 'iptv')
+    if not os.path.exists(path):
+        os.makedirs(path)
+    #input/iptv/config
+    writejson(os.path.join(path, 'config'), {
+        'uuid': uuid(),
+        'skipinitscan': 1,
+        'autodiscovery': 0
+    })
+    #input/iptv/networks/uuid()
+    path = os.path.join(path, 'networks', uuid())
+    if not os.path.exists(path):
+        os.makedirs(path)
+    writejson(os.path.join(path, 'config'), {
+        'networkname': 'IPTV network',
+        'skipinitscan': 1,
+        'autodiscovery': 0
+    })
+    #input/iptv/networks/uuid()/muxes
+    path = os.path.join(path, 'muxes')
+    if not os.path.exists(path):
+        os.mkdir(path)
+    #one mux and service for each channel
+    for channel in channels.values():
+        muxid = uuid()
+        muxpath = os.path.join(path, muxid)
+        if not os.path.exists(muxpath):
+            os.mkdir(muxpath)
+        jsmux = {
+            'iptv_url': "udp://%s:%s" % (channel['ip'], channel['port']),
+            'iptv_interface': 'eth1',
+            'iptv_atsc': 0,
+            'iptv_enabled': 1
+        }
+        #input/iptv/networks/uuid()/muxes/uuid()/config file
+        writejson(os.path.join(muxpath, 'config'), jsmux)
+        #input/iptv/networks/uuid()/muxes/uuid()/services/uuid()
+        svcpath = os.path.join(muxpath, 'services')
+        if not os.path.exists(svcpath):
+            os.mkdir(svcpath)
+        svcid = uuid()
+        jssvc = {
+            'sid': 1,
+            'svcname': channel['name'],
+            'name': channel['name'],
+            'dvb_servicetype': 1,
+            'enabled': 1
+        }
+        writejson(os.path.join(svcpath, svcid), jssvc)
+
+        #channel
+        chanid=uuid()
+        jschan={
+            'name': channel['name'],
+            'dvr_pre_time': 0,
+            'dvr_pst_time': 0,
+            'services': [svcid]
+        }
+        if channel['number'] is not None:
+            jschan['number'] = int(channel['number'])
+        if channel['tags'] is not None:
+            jschan['tags'] = list(tags[x]['num'] for x in channel['tags'])
+        if channel['icon'] is not None:
+            jschan['icon'] = channel['icon']
+        writejson(os.path.join(chnpath, chanid), jschan)
+
+        #epg
+        #epggrab/xmltv/channels/#
+        if channel['xmltv'] is not None:
+            xmlid = channel['xmltv']
+        else:
+            xmlid = channel['name']
+        jsepg={
+            'name': xmlid,
+            'channels': [chanid]
+        }
+        writejson(os.path.join(xmltvpath, chanid), jsepg)
 
 
 def writetags():
-    if not os.path.exists(CHANNELTAGS):
-        os.mkdir(CHANNELTAGS)
+    path = 'channeltags'
+    if not os.path.exists(path):
+        os.mkdir(path)
     for tag in tags.values():
-        #channetags/?
+        #channeltags/?
         jstag = {'enabled': 1,
                  'internal': 0,
                  'titledIcon': 0,
                  'name': tag['name'],
                  'comment': '', 'icon': '',
                  'id': tag['num']}
-        writejson(os.path.join(CHANNELTAGS, str(tag['num'])), jstag)
+        writejson(os.path.join(path, str(tag['num'])), jstag)
 
 
 def writejson(filename, obj):
@@ -167,14 +260,17 @@ def main():
                    help=u'program numbers are generated(0), determined from duration(1) or extracted from program names(2)')
     par.add_option('-c', '--codec', action='store', dest='codec', default='cp1250',
                    help=u'input file encoding [default: %default]')
+    par.add_option('--newformat', action='store_true',
+                   help=u'generate TVHeadend 3.9+ compatible configuration files (experimental)')
     opt, args = par.parse_args()
     if len(args) == 1:
         readm3u(args[0], opt.removenum, opt.numbering, opt.codec)
-        writechannels()
+        writechannels39() if opt.newformat else writechannels()
         writetags()
         print("OK")
     else:
         par.print_help()
+
 
 if __name__ == '__main__':
     main()
