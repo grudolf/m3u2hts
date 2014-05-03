@@ -142,7 +142,7 @@ def writechannels39():
     if not os.path.exists(xmltvpath):
         os.makedirs(xmltvpath)
 
-    chnpath='channel'
+    chnpath = 'channel'
     if not os.path.exists(chnpath):
         os.makedirs(chnpath)
 
@@ -176,10 +176,12 @@ def writechannels39():
         if not os.path.exists(muxpath):
             os.mkdir(muxpath)
         jsmux = {
-            'iptv_url': "udp://%s:%s" % (channel['ip'], channel['port']),
+            'iptv_url': "udp://@%s:%s" % (channel['ip'], channel['port']),
             'iptv_interface': 'eth1',
             'iptv_atsc': 0,
-            'iptv_enabled': 1
+            'iptv_svcname': channel['name'],
+            'enabled': 1,
+            'initscan': 1  # mark mux as scanned
         }
         #input/iptv/networks/uuid()/muxes/uuid()/config file
         writejson(os.path.join(muxpath, 'config'), jsmux)
@@ -189,7 +191,7 @@ def writechannels39():
             os.mkdir(svcpath)
         svcid = uuid()
         jssvc = {
-            'sid': 1,
+            'sid': 1,   # guess service id
             'svcname': channel['name'],
             'name': channel['name'],
             'dvb_servicetype': 1,
@@ -198,8 +200,8 @@ def writechannels39():
         writejson(os.path.join(svcpath, svcid), jssvc)
 
         #channel
-        chanid=uuid()
-        jschan={
+        chanid = uuid()
+        jschan = {
             'name': channel['name'],
             'dvr_pre_time': 0,
             'dvr_pst_time': 0,
@@ -219,7 +221,7 @@ def writechannels39():
             xmlid = channel['xmltv']
         else:
             xmlid = channel['name']
-        jsepg={
+        jsepg = {
             'name': xmlid,
             'channels': [chanid]
         }
