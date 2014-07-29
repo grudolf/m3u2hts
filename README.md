@@ -18,11 +18,11 @@ The #EXTTV line and its contents are optional.
 sample.m3u::
 
     #EXTINF:0,1 - SLO 1
-    #EXTTV:nacionalni;slovenski;SLO 1
+    #EXTTV:nacionalni;slovenski;SLO1
     udp://@239.1.1.115:5000
 
     #EXTINF:0,SLO 1 HD
-    #EXTTV:nacionalni,hd;slovenski;http://cdn1.siol.tv/logo/93x78/slo2.png
+    #EXTTV:nacionalni,hd;slovenski;SLO1;http://cdn1.siol.tv/logo/93x78/slo2.png
     udp://@239.10.2.56:5000
 
 The script creates iptvservices, channels and channeltags directories into which the
@@ -45,7 +45,7 @@ following files are written::
     channels/X
     {
         "name": "SLO 1",
-        "xmltv-channel": "SLO 1",
+        "xmltv-channel": "SLO1",
         "tags": [
                  1,2
         ],
