@@ -100,10 +100,13 @@ def readm3u(infile, removenum, channumbering, inputcodec):
 def writechannels():
     svcpath = 'iptvservices'
     chnpath = 'channels'
+    xmltvpath = "epggrab/xmltv/channels"
     if not os.path.exists(svcpath):
         os.mkdir(svcpath)
     if not os.path.exists(chnpath):
         os.mkdir(chnpath)
+    if not os.path.exists(xmltvpath):
+        os.makedirs(xmltvpath)
     for channel in channels.values():
         #iptvservices/iptv_?
         jssvc = {'pmt': 0,
@@ -129,6 +132,17 @@ def writechannels():
         if channel['icon'] is not None:
             jschan['icon'] = channel['icon']
         writejson(os.path.join(chnpath, str(channel['num'])), jschan)
+
+        #epg, if defined
+        #epggrab/xmltv/channels/?
+        if channel['xmltv']:
+            xmlid = channel['xmltv']
+            jsepg = {
+                'name': xmlid,
+                'channels': [channel['number']]
+            }
+            writejson(os.path.join(xmltvpath, xmlid), jsepg)
+
 
 
 def uuid():

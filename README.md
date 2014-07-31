@@ -25,7 +25,7 @@ sample.m3u::
     #EXTTV:nacionalni,hd;slovenski;SLO1;http://cdn1.siol.tv/logo/93x78/slo2.png
     udp://@239.10.2.56:5000
 
-The script creates iptvservices, channels and channeltags directories into which the
+The script creates iptvservices, channels, channeltags and epggrab/xmltv/channels directories into which the
 following files are written::
 
     #one file per channel:
@@ -66,6 +66,15 @@ following files are written::
         "icon": "",
         "id": 1
     }
+    
+    #one file per channel with XMLTV id
+    epggrab/xmltv/channels/X
+    {
+        "channels": [
+            1
+        ], 
+        "name": "SLO1"
+    }
 
 Usage
 -----
@@ -76,7 +85,7 @@ If you want to import the configuration directly, you should stop the TVHeadend 
     sudo service tvheadend stop
     sudo su hts
     cd ~/.hts/tvheadend/
-    rm iptvservices/* channels/* channeltags/*
+    rm iptvservices/* channels/* channeltags/* epggrab/xmltv/channels/*
     m3u2hts.py inputfile.m3u
     exit
     sudo service tvheadend start
