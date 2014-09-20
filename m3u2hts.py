@@ -39,7 +39,8 @@ def readm3u(infile, removenum, channumbering, inputcodec):
     """
 
     instream = codecs.open(infile, "Ur", encoding=inputcodec)
-
+    
+    urlRegex = re.compile("\D+\:\/\/.+")
     chancnt = 0
     tagcnt = 0
     chname = ''
@@ -78,7 +79,7 @@ def readm3u(infile, removenum, channumbering, inputcodec):
                 chtags.append(chlanguage)
             chxmltv = buff[2]
             chicon = buff[3] if len(buff) > 3 else None
-        elif line.startswith('udp://@'):
+        elif urlRegex.match(line):
             chancnt += 1
             if channumbering == CHAN_NUMBERING_GENERATE: chnumber = chancnt
             chip, chport = line[7:].rsplit(':', 1)
