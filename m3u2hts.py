@@ -39,7 +39,8 @@ def readm3u(infile, removenum, channumbering, inputcodec):
     """
 
     instream = codecs.open(infile, "Ur", encoding=inputcodec)
-
+    
+    urlRegex = re.compile(r"^((?P<schema>.+?)://@?)?(?P<host>.*?)(:(?P<port>\d+?))?$")
     chancnt = 0
     tagcnt = 0
     chname = ''
@@ -78,23 +79,23 @@ def readm3u(infile, removenum, channumbering, inputcodec):
                 chtags.append(chlanguage)
             chxmltv = buff[2]
             chicon = buff[3] if len(buff) > 3 else None
-        elif line.startswith('udp://@'):
+        else:
+            chgroup = re.search(urlRegex, line).groupdict()
+            if not chgroup or not chgroup["schema"]:
+                continue
             chancnt += 1
             if channumbering == CHAN_NUMBERING_GENERATE: chnumber = chancnt
-            chip, chport = line[7:].rsplit(':', 1)
             if chname in channels:
                 print "%s already exists" % chname
                 chname = chname + '.'
             channels[chname] = {'num': chancnt, 'number': chnumber, 'name': chname, 'tags': chtags, 'lang': chlanguage,
-                                'ip': chip, 'port': chport, 'xmltv': chxmltv, 'icon': chicon}
+                                'ip': chgroup["host"], 'port': chgroup["port"], 'xmltv': chxmltv, 'icon': chicon}
             chname = ''
             chtags = None
             chlanguage = None
             chnumber = None
             chxmltv = None
             chicon = None
-        else:
-            continue
 
 
 def writechannels():
