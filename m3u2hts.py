@@ -156,7 +156,7 @@ def writechannels39():
     if not os.path.exists(xmltvpath):
         os.makedirs(xmltvpath)
 
-    chnpath = 'channel'
+    chnpath = 'channel/config'
     if not os.path.exists(chnpath):
         os.makedirs(chnpath)
 
@@ -213,7 +213,7 @@ def writechannels39():
         }
         writejson(os.path.join(svcpath, svcid), jssvc)
 
-        #channel
+        #channel/config
         chanid = uuid()
         jschan = {
             'name': channel['name'],

@@ -102,9 +102,9 @@ The file structure is:
     input/iptv/networks/UUID/config                      - one network
     input/iptv/networks/UUID/muxes/UUID/config           - one mux per channel
     input/iptv/networks/UUID/muxes/UUID/services/UUID    - one service per channel
-    channel/UUID                                         - channel (linked to service)
+    channel/config/UUID                                  - channel (linked to service)
+    channel/tag/UUID                                     - channel tags
     epggrab/xmltv/channels/UUID                          - EPG info (linked to channel)
-    channeltags/#                                        - channel tags
 
 Licence
 -------
