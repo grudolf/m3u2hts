@@ -4,7 +4,24 @@ m3u2hts
 Generate TVHeadend 3.x channel/tag configuration files from VLC compatible IPTV M3U playlist.
 
 
-About
+Usage
+-----
+
+Use ``m3u2hts.py [options] inputfile`` or ``m3u2hts.py -h`` for help with parameters.
+If you want to import the configuration directly, you should stop the TVHeadend service and delete current config first. Ubuntu example::
+
+    sudo service tvheadend stop
+    sudo su hts
+    cd ~/.hts/tvheadend/
+    rm iptvservices/* channels/* channeltags/* epggrab/xmltv/channels/*
+    m3u2hts.py inputfile.m3u
+    exit
+    sudo service tvheadend start
+
+Alternatively, run the script somewhere else and transfer the files to TVHeadend config dir when service isn't running.
+
+
+Input
 -----
 
 Channel and optional tag definitions are read from a M3U playlist file::
@@ -24,6 +41,10 @@ sample.m3u::
     #EXTINF:0,SLO 1 HD
     #EXTTV:nacionalni,hd;slovenski;SLO1;http://cdn1.siol.tv/logo/93x78/slo2.png
     udp://@239.10.2.56:5000
+
+
+Output
+------
 
 The script creates iptvservices, channels, channeltags and epggrab/xmltv/channels directories into which the
 following files are written::
@@ -76,24 +97,8 @@ following files are written::
         "name": "SLO1"
     }
 
-Usage
------
-
-Use ``m3u2hts.py [options] inputfile`` or ``m3u2hts.py -h`` for help.
-If you want to import the configuration directly, you should stop the TVHeadend service and delete current config first::
-
-    sudo service tvheadend stop
-    sudo su hts
-    cd ~/.hts/tvheadend/
-    rm iptvservices/* channels/* channeltags/* epggrab/xmltv/channels/*
-    m3u2hts.py inputfile.m3u
-    exit
-    sudo service tvheadend start
-
-Alternatively, run the script somewhere else and transfer the files to TVHeadend config dir when service isn't running.
-
-New file format
----------------
+Output (TVHeadend 3.9+)
+-----------------------
 
 Experimental, use ``--newformat`` switch to create TVHeadend 3.9 compatible configuration.
 The file structure is:
