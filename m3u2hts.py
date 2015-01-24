@@ -98,7 +98,7 @@ def readm3u(infile, removenum, channumbering, inputcodec):
             chicon = None
 
 
-def writechannels():
+def writechannels(iface):
     svcpath = 'iptvservices'
     chnpath = 'channels'
     xmltvpath = "epggrab/xmltv/channels"
@@ -113,7 +113,7 @@ def writechannels():
         jssvc = {'pmt': 0,
                  'channelname': channel['name'],
                  'port': channel['port'],
-                 'interface': 'eth1',
+                 'interface': iface,
                  'group': channel['ip'],
                  'mapped': 1,
                  'pcr': 0,
@@ -165,7 +165,7 @@ def uuid():
     return uuid.uuid4().hex
 
 
-def writechannels39():
+def writechannels39(iface):
     xmltvpath = "epggrab/xmltv/channels"
     if not os.path.exists(xmltvpath):
         os.makedirs(xmltvpath)
@@ -224,7 +224,7 @@ def writechannels39():
             os.mkdir(muxpath)
         jsmux = {
             'iptv_url': "udp://@%s:%s" % (channel['ip'], channel['port']),
-            'iptv_interface': 'eth1',
+            'iptv_interface': iface,
             'iptv_atsc': 0,
             'iptv_svcname': channel['name'],
             'iptv_muxname': channel['name'],
@@ -300,12 +300,14 @@ def main():
                    help=u'program numbers are generated(0), determined from duration(1) or extracted from program names(2)')
     par.add_option('-c', '--codec', action='store', dest='codec', default='cp1250',
                    help=u'input file encoding [default: %default]')
+    par.add_option('-i', '--iface', action='store', dest='iface', default='eth1',
+                   help=u'IPTV interface [default: %default]')
     par.add_option('--newformat', action='store_true',
                    help=u'generate TVHeadend 3.9+ compatible configuration files (experimental)')
     opt, args = par.parse_args()
     if len(args) == 1:
         readm3u(args[0], opt.removenum, opt.numbering, opt.codec)
-        writechannels39() if opt.newformat else writechannels()
+        writechannels39(opt.iface) if opt.newformat else writechannels(opt.iface)
         print("OK")
     else:
         par.print_help()
