@@ -223,8 +223,12 @@ def writechannels39(iface):
         muxpath = os.path.join(path, muxid)
         if not os.path.exists(muxpath):
             os.mkdir(muxpath)
+        if channel['port']:
+            url = "%s://@%s:%s" % (channel['scheme'], channel['ip'], channel['port'])
+        else:
+            url = "%s://@%s" % (channel['scheme'], channel['ip'])
         jsmux = {
-            'iptv_url': "%s://@%s:%s" % (channel['scheme'], channel['ip'], channel['port']),
+            'iptv_url': url,
             'iptv_interface': iface,
             'iptv_atsc': 0,
             'iptv_svcname': channel['name'],
