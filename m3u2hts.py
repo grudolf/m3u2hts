@@ -20,6 +20,7 @@ except ImportError:
     import simplejson as json
 
 PROGNUM = re.compile(r"(\d+) - (.*)")  # #EXTINF:0,1 - SLO 1 -> #1 - num, 2 - ime
+URLPART = re.compile(r"^((?P<scheme>.+?)://@?)?(?P<host>.*?)(:(?P<port>\d+?))?$")
 
 CHAN_NUMBERING_GENERATE = 0
 CHAN_NUMBERING_DURATION = 1
@@ -40,7 +41,6 @@ def readm3u(infile, removenum, channumbering, inputcodec):
 
     instream = codecs.open(infile, "Ur", encoding=inputcodec)
     
-    urlRegex = re.compile(r"^((?P<schema>.+?)://@?)?(?P<host>.*?)(:(?P<port>\d+?))?$")
     chancnt = 0
     tagcnt = 0
     chname = ''
@@ -80,16 +80,17 @@ def readm3u(infile, removenum, channumbering, inputcodec):
             chxmltv = buff[2]
             chicon = buff[3] if len(buff) > 3 else None
         else:
-            chgroup = re.search(urlRegex, line).groupdict()
-            if not chgroup or not chgroup["schema"]:
+            chgroup = re.search(URLPART, line).groupdict()
+            if not chgroup or not chgroup["scheme"]:
                 continue
             chancnt += 1
             if channumbering == CHAN_NUMBERING_GENERATE: chnumber = chancnt
             if chname in channels:
                 print "%s already exists" % chname
-                chname = chname + '.'
+                chname += '.'
             channels[chname] = {'num': chancnt, 'number': chnumber, 'name': chname, 'tags': chtags, 'lang': chlanguage,
-                                'ip': chgroup["host"], 'port': chgroup["port"], 'xmltv': chxmltv, 'icon': chicon}
+                                'scheme': chgroup["scheme"], 'ip': chgroup["host"], 'port': chgroup["port"],
+                                'xmltv': chxmltv, 'icon': chicon}
             chname = ''
             chtags = None
             chlanguage = None
@@ -223,7 +224,7 @@ def writechannels39(iface):
         if not os.path.exists(muxpath):
             os.mkdir(muxpath)
         jsmux = {
-            'iptv_url': "udp://@%s:%s" % (channel['ip'], channel['port']),
+            'iptv_url': "%s://@%s:%s" % (channel['scheme'], channel['ip'], channel['port']),
             'iptv_interface': iface,
             'iptv_atsc': 0,
             'iptv_svcname': channel['name'],
