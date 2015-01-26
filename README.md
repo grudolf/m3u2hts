@@ -106,10 +106,18 @@ The file structure is:
     input/iptv/config
     input/iptv/networks/UUID/config                      - one network
     input/iptv/networks/UUID/muxes/UUID/config           - one mux per channel
-    input/iptv/networks/UUID/muxes/UUID/services/UUID    - one service per channel
+    input/iptv/networks/UUID/muxes/UUID/services/UUID    - one fake service per channel, -o service option
     channel/tag/UUID                                     - channel tags
-    channel/config/UUID                                  - channel (linked to services, tags)
-    epggrab/xmltv/channels/UUID                          - EPG info (linked to channel)
+    channel/config/UUID                                  - channel (linked to services, tags), -o channel option
+    epggrab/xmltv/channels/UUID                          - EPG info (linked to channel), -o channel option
+
+Unfortunately, M3U file is missing a few pieces of information Tvheadend now requires in order to form the mux -> service -> channel chain, most importantly the service id.
+The service that m3u2hts creates when you use ``-o service`` option sadly won't work in most cases and you'll have to scan muxes with tvheadend - open network properties, enable "Idle scan muxes" and limit "Max input streams" to something your network can handle.
+When the scanning is finished you'll have to map services to channels in either services or channels screen.
+
+If you're lucky and your IPTV provider uses one service per mux and identical names for muxes, services, channels and EPG info, everything will go smoothly.
+OTOH, if your provider has 50+ services on a mux for a single working channel and wildly mismatched names, you're better off if you let m3u2hts create channels and optional EPG info with ``-o channel`` option and manually link them to scanned services.
+
 
 Licence
 -------

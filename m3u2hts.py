@@ -166,7 +166,7 @@ def uuid():
     return uuid.uuid4().hex
 
 
-def writechannels39(iface):
+def writechannels39(iface, output):
     xmltvpath = "epggrab/xmltv/channels"
     if not os.path.exists(xmltvpath):
         os.makedirs(xmltvpath)
@@ -243,11 +243,11 @@ def writechannels39(iface):
         svcpath = os.path.join(muxpath, 'services')
         if not os.path.exists(svcpath):
             os.mkdir(svcpath)
-        #TODO: create empty service with id 1 or don't
-        if False:
+        #create empty service with id 0
+        if 'service' in output:
             svcid = uuid()
             jssvc = {
-                'sid': 1,   # guess service id
+                'sid': 0,   # guess service id
                 'svcname': channel['name'],
                 'name': channel['name'],
                 'dvb_servicetype': 1,
@@ -258,32 +258,33 @@ def writechannels39(iface):
             svcid = None
 
         #channel/config
-        chanid = uuid()
-        jschan = {
-            'name': channel['name'],
-            'dvr_pre_time': 0,
-            'dvr_pst_time': 0,
-            'services': [svcid]
-        }
-        if channel['number'] is not None:
-            jschan['number'] = int(channel['number'])
-        if channel['tags'] is not None:
-            jschan['tags'] = list(tags[x]['id'] for x in channel['tags'])
-        if channel['icon'] is not None:
-            jschan['icon'] = channel['icon']
-        writejson(os.path.join(chnpath, chanid), jschan)
+        if 'channel' in output:
+            chanid = uuid()
+            jschan = {
+                'name': channel['name'],
+                'dvr_pre_time': 0,
+                'dvr_pst_time': 0,
+                'services': [svcid]
+            }
+            if channel['number'] is not None:
+                jschan['number'] = int(channel['number'])
+            if channel['tags'] is not None:
+                jschan['tags'] = list(tags[x]['id'] for x in channel['tags'])
+            if channel['icon'] is not None:
+                jschan['icon'] = channel['icon']
+            writejson(os.path.join(chnpath, chanid), jschan)
 
-        #epg
-        #epggrab/xmltv/channels/#
-        if channel['xmltv'] is not None:
-            xmlid = channel['xmltv']
-        else:
-            xmlid = channel['name']
-        jsepg = {
-            'name': xmlid,
-            'channels': [chanid]
-        }
-        writejson(os.path.join(xmltvpath, chanid), jsepg)
+            #epg
+            #epggrab/xmltv/channels/#
+            if channel['xmltv'] is not None:
+                xmlid = channel['xmltv']
+            else:
+                xmlid = channel['name']
+            jsepg = {
+                'name': xmlid,
+                'channels': [chanid]
+            }
+            writejson(os.path.join(xmltvpath, chanid), jsepg)
 
 
 def writejson(filename, obj):
@@ -309,10 +310,13 @@ def main():
                    help=u'IPTV interface [default: %default]')
     par.add_option('--newformat', action='store_true',
                    help=u'generate TVHeadend 3.9+ compatible configuration files (experimental)')
+    par.add_option('-o', '--output', action='append', type='string', dest='output',
+                   help=u'what kind of 3.9 output to generate in addition to muxes. '
+                        u'Available options are "service" and "channel", repeat to combine [default: none]')
     opt, args = par.parse_args()
     if len(args) == 1:
         readm3u(args[0], opt.removenum, opt.numbering, opt.codec)
-        writechannels39(opt.iface) if opt.newformat else writechannels(opt.iface)
+        writechannels39(opt.iface, opt.output) if opt.newformat else writechannels(opt.iface)
         print("OK")
     else:
         par.print_help()
