@@ -86,7 +86,7 @@ def readm3u(infile, removenum, channumbering, inputcodec):
             chancnt += 1
             if channumbering == CHAN_NUMBERING_GENERATE: chnumber = chancnt
             if chname in channels:
-                print "%s already exists" % chname
+                print("%s already exists" % chname)
                 chname += '.'
             channels[chname] = {'num': chancnt, 'number': chnumber, 'name': chname, 'tags': chtags, 'lang': chlanguage,
                                 'scheme': chgroup["scheme"], 'ip': chgroup["host"], 'port': chgroup["port"],
